@@ -4,12 +4,12 @@ import discord
 import telebot
 from flask import Flask
 
-# Telegram Credentials
+# Telegram Credentials (Yeh safe hain, inhe yahan rakh sakte hain)
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "8921710043:AAGPh-_PdJEiMTSLAwVzEu21f9ZEHFSN3Iw")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "1882925079")
 
-# Aapka Discord Bot Token
-DISCORD_BOT_TOKEN = os.environ.get("DISCORD_BOT_TOKEN", "MTU0MTcwMDM3NjMwNTIwNTM2MA.G_BnKL.STdoD9gMl2gTMCFvVXt2KA7nRDHsWFFHFq5Xxk")
+# Discord Bot Token (Yeh ab Render ke Environment Variable se uthayega)
+DISCORD_BOT_TOKEN = os.environ.get("DISCORD_BOT_TOKEN")
 
 # Telegram Bot Setup
 tele_bot = telebot.TeleBot(TELEGRAM_TOKEN)
@@ -25,9 +25,11 @@ async def on_ready():
 
 @discord_client.event
 async def on_message(message):
+    # Apne bot ke messages ko ignore karna taaki loop na bane
     if message.author == discord_client.user:
         return
 
+    # Agar message ya embed aaye toh read karega
     if message.content or message.embeds:
         content = message.content or ""
         embed_texts = []
@@ -46,6 +48,7 @@ async def on_message(message):
             footer_text = "\n\n──────────────────\n👑 **Owner:** @xdsp18\n🛒 **Buy fruit and gamepasses**"
             final_message = f"🔥 *Blox Fruit Live Stock (Discord Sync):*\n\n{full_text.strip()}{footer_text}"
             
+            # Telegram par message bhej dena
             tele_bot.send_message(TELEGRAM_CHAT_ID, final_message, parse_mode='Markdown')
 
 # Render ke liye Flask server
@@ -57,7 +60,10 @@ def home():
 
 if __name__ == '__main__':
     def run_discord():
-        discord_client.run(DISCORD_BOT_TOKEN)
+        if DISCORD_BOT_TOKEN:
+            discord_client.run(DISCORD_BOT_TOKEN)
+        else:
+            print("Error: DISCORD_BOT_TOKEN environment variable is missing!")
         
     t = threading.Thread(target=run_discord)
     t.start()
