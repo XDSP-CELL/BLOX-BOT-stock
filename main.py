@@ -8,7 +8,7 @@ from flask import Flask
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "8921710043:AAGPh-_PdJEiMTSLAwVzEu21f9ZEHFSN3Iw")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "1882925079")
 
-# Discord Bot Token (Render Environment Variable se aayega)
+# Discord Bot Token
 DISCORD_BOT_TOKEN = os.environ.get("DISCORD_BOT_TOKEN")
 
 # Telegram Bot Setup
@@ -25,11 +25,11 @@ async def on_ready():
 
 @discord_client.event
 async def on_message(message):
-    # Apne bot ke messages ko ignore karna taaki loop na bane
+    # Apne bot ke messages ko ignore karna
     if message.author == discord_client.user:
         return
 
-    # Chahe message plain text ho ya kisi bot ka embed/stock card, sabko read karega
+    # Message ya Embed ko read karna
     if message.content or message.embeds:
         content = message.content or ""
         embed_texts = []
@@ -39,21 +39,23 @@ async def on_message(message):
                 embed_texts.append(f"**{embed.title}**")
             if embed.description:
                 embed_texts.append(embed.description)
-            # Embed ke andar ke fields (jaise fruits aur unke prices) ko nikalne ke liye
             for field in embed.fields:
-                field_name = field.name or ""
-                field_value = field.value or ""
-                embed_texts.append(f"\n{field_name}\n{field_value}")
+                if field.name:
+                    embed_texts.append(f"\n{field.name}")
+                if field.value:
+                    embed_texts.append(field.value)
                 
         full_text = content + "\n" + "\n".join(embed_texts)
         
-        # Agar text ya embed mein kuch bhi data hai toh Telegram par bhej dega
         if full_text.strip():
             footer_text = "\n\n──────────────────\n👑 **Owner:** @xdsp18\n🛒 **Buy fruit and gamepasses**"
             final_message = f"🔥 *Blox Fruit Live Stock (Discord Sync):*\n\n{full_text.strip()}{footer_text}"
             
-            # Telegram par message bhej dena
-            tele_bot.send_message(TELEGRAM_CHAT_ID, final_message, parse_mode='Markdown')
+            # Telegram par bhej dena
+            try:
+                tele_bot.send_message(TELEGRAM_CHAT_ID, final_message, parse_mode='Markdown')
+            except Exception as e:
+                print(f"Telegram Error: {e}")
 
 # Render ke liye Flask server
 app = Flask(__name__)
