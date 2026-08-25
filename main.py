@@ -17,73 +17,71 @@ tele_bot = telebot.TeleBot(TELEGRAM_TOKEN)
 # Discord Bot Setup
 intents = discord.Intents.default()
 intents.message_content = True
+intents.messages = True
 discord_client = discord.Client(intents=intents)
 
-def send_to_telegram(message):
-    """Message aur Embeds ko extract karke Telegram par bhejne ka function"""
-    # Apne hi bot ke messages ignore karein
+def process_and_send(message):
+    # Apne bot ke messages ko ignore karna
     if message.author == discord_client.user:
         return
 
-    content = message.content or ""
-    embed_texts = []
+    text_content = message.content or ""
+    embed_contents = []
 
-    for embed in message.embeds:
-        if embed.title:
-            embed_texts.append(f"**{embed.title}**")
-        if embed.description:
-            embed_texts.append(embed.description)
-        for field in embed.fields:
-            if field.name and field.value:
-                embed_texts.append(f"**{field.name}**\n{field.value}")
-            elif field.name:
-                embed_texts.append(f"**{field.name}**")
-            elif field.value:
-                embed_texts.append(field.value)
-        if embed.footer and embed.footer.text:
-            embed_texts.append(f"_{embed.footer.text}_")
+    # Bloxy Stocks bot ka data jahan bhi chupa ho, use jabardasti nikalna
+    if message.embeds:
+        for embed in message.embeds:
+            data = embed.to_dict()
+            if 'author' in data and 'name' in data['author']: embed_contents.append(str(data['author']['name']))
+            if 'title' in data: embed_contents.append(str(data['title']))
+            if 'description' in data: embed_contents.append(str(data['description']))
+            if 'fields' in data:
+                for field in data['fields']:
+                    embed_contents.append(f"\n{field.get('name', '')}\n{field.get('value', '')}")
+            if 'footer' in data and 'text' in data['footer']: embed_contents.append(str(data['footer']['text']))
 
-    full_text = (content + "\n" + "\n".join(embed_texts)).strip()
+    full_text = text_content + "\n" + "\n".join(embed_contents)
+    full_text = full_text.strip()
 
-    # Khali messages ya single dot test messages ko skip karne ke liye check
-    if full_text and full_text != ".":
-        footer_text = "\n\n──────────────────\n👑 **Owner:** @xdsp18\n🛒 **Buy fruit and gamepasses**"
-        final_message = f"🔥 *Blox Fruit Live Stock (Discord Sync):*\n\n{full_text}{footer_text}"
-
+    # Agar thoda sa bhi text mila toh bhej do
+    if full_text:
+        final_message = f"🔥 *Blox Fruit Live Stock:*\n\n{full_text}\n\n──────────────────\n👑 **Owner:** @xdsp18\n🛒 **Buy fruit and gamepasses**"
         try:
+            # Markdown ke sath bhejne ki koshish
             tele_bot.send_message(TELEGRAM_CHAT_ID, final_message, parse_mode='Markdown')
         except Exception:
+            # Agar emojis ya format ki wajah se error aaye toh simple text bhej do
             tele_bot.send_message(TELEGRAM_CHAT_ID, final_message)
 
 @discord_client.event
 async def on_ready():
-    print(f"Logged in as Discord Bot: {discord_client.user}")
+    print(f"Logged in as {discord_client.user}")
+    # Deploy hote hi Telegram par message aayega!
+    try:
+        tele_bot.send_message(TELEGRAM_CHAT_ID, "✅ **System Online:** Discord to Telegram bridge is now active!")
+    except Exception:
+        pass
 
 @discord_client.event
 async def on_message(message):
-    send_to_telegram(message)
+    process_and_send(message)
 
 @discord_client.event
 async def on_message_edit(before, after):
-    # Jab Bloxy Stocks bot response ko update/edit karega tab yeh trigger hoga
-    send_to_telegram(after)
+    process_and_send(after)
 
 # Render ke liye Flask server
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "Discord-Telegram Bridge is Alive!"
+    return "Bot is Alive!"
 
 if __name__ == '__main__':
     def run_discord():
         if DISCORD_BOT_TOKEN:
             discord_client.run(DISCORD_BOT_TOKEN)
-        else:
-            print("Error: DISCORD_BOT_TOKEN environment variable is missing!")
-
-    t = threading.Thread(target=run_discord)
-    t.start()
-
+    
+    threading.Thread(target=run_discord).start()
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
