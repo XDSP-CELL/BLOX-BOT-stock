@@ -4,11 +4,11 @@ import discord
 import telebot
 from flask import Flask
 
-# Telegram Credentials (Yeh safe hain, inhe yahan rakh sakte hain)
+# Telegram Credentials
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "8921710043:AAGPh-_PdJEiMTSLAwVzEu21f9ZEHFSN3Iw")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "1882925079")
 
-# Discord Bot Token (Yeh ab Render ke Environment Variable se uthayega)
+# Discord Bot Token (Render Environment Variable se aayega)
 DISCORD_BOT_TOKEN = os.environ.get("DISCORD_BOT_TOKEN")
 
 # Telegram Bot Setup
@@ -54,3 +54,23 @@ async def on_message(message):
             
             # Telegram par message bhej dena
             tele_bot.send_message(TELEGRAM_CHAT_ID, final_message, parse_mode='Markdown')
+
+# Render ke liye Flask server
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Discord-Telegram Bridge is Alive!"
+
+if __name__ == '__main__':
+    def run_discord():
+        if DISCORD_BOT_TOKEN:
+            discord_client.run(DISCORD_BOT_TOKEN)
+        else:
+            print("Error: DISCORD_BOT_TOKEN environment variable is missing!")
+        
+    t = threading.Thread(target=run_discord)
+    t.start()
+    
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
