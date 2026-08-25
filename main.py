@@ -2,10 +2,12 @@ import os
 import telebot
 from flask import Flask, request
 
-# Apna Telegram Bot Token yahan dalein
+# Telegram Token aur Chat ID
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "8921710043:AAGPh-_PdJEiMTSLAwVzEu21f9ZEHFSN3Iw")
-# Jis Telegram chat/channel par message bhejna hai uska ID yahan dalein
-TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "YOUR_TELEGRAM_CHAT_ID")
+TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "1882925079")
+
+# Aapka Discord Webhook URL (Reference ke liye yahan stored hai)
+DISCORD_WEBHOOK_URL = "https://discordapp.com/api/webhooks/1541694701747576923/qtLddWj-_npom2LzEzRGRF7jl9qejMUfB-1ECZDOj9_JW7aWUaLUaYXmfnwBPG-N59r6"
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 app = Flask(__name__)
@@ -14,9 +16,8 @@ app = Flask(__name__)
 def discord_webhook():
     data = request.json
     
-    # Discord webhook se aane wala message data check karna
+    # Discord webhook se aane wale data ko check karna
     if data and ("content" in data or "embeds" in data):
-        # Agar content me text hai
         stock_message = data.get("content", "")
         
         # Agar Discord bot embeds (rich cards) bhej raha hai
