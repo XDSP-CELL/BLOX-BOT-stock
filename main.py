@@ -1,7 +1,8 @@
 import os
+import threading
 import discord
 import telebot
-from flask import Flask, threading
+from flask import Flask
 
 # Telegram Credentials
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "8921710043:AAGPh-_PdJEiMTSLAwVzEu21f9ZEHFSN3Iw")
@@ -24,11 +25,9 @@ async def on_ready():
 
 @discord_client.event
 async def on_message(message):
-    # Ignore messages sent by the bot itself to prevent loops
     if message.author == discord_client.user:
         return
 
-    # Check if message has content or embeds
     if message.content or message.embeds:
         content = message.content or ""
         embed_texts = []
@@ -47,7 +46,6 @@ async def on_message(message):
             footer_text = "\n\n──────────────────\n👑 **Owner:** @xdsp18\n🛒 **Buy fruit and gamepasses**"
             final_message = f"🔥 *Blox Fruit Live Stock (Discord Sync):*\n\n{full_text.strip()}{footer_text}"
             
-            # Telegram par message bhej dena
             tele_bot.send_message(TELEGRAM_CHAT_ID, final_message, parse_mode='Markdown')
 
 # Render ke liye Flask server
@@ -58,15 +56,11 @@ def home():
     return "Discord-Telegram Bridge is Alive!"
 
 if __name__ == '__main__':
-    import threading
-    
-    # Background mein Discord bot chalane ke liye thread
     def run_discord():
         discord_client.run(DISCORD_BOT_TOKEN)
         
     t = threading.Thread(target=run_discord)
     t.start()
     
-    # Render port ke liye Flask server chalana
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
